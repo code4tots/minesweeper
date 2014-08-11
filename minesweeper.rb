@@ -10,27 +10,78 @@ class Tile
   end
   
   def neighbor_bomb_count
-    0
+    [-1, 0, 1].product([-1, 0, 1]).map do |dr, dc|
+      if @board[ [@row + dr, @col + dc] ].bomb 
+        true 
+      else
+        nil
+      end
+    end.compact.size
   end
   
 end
 
 class Board
-  def initialize
-    @rows = Array.new(3) { |r| Array.new(3) { |c| Tile.new(self, r, c) } }
+  def initialize(nrows = 9, ncols = 9)
+    @nrows = nrows
+    @ncols = ncols
+    @rows = Array.new(height) do |r|
+      Array.new(width) do |c|
+        Tile.new(self, r, c)
+      end
+    end
+    
+    @revealed_bomb = false
+    
   end
   
   def width
-    9
+    @ncols
   end
   
   def height
-    9
+    @nrows
   end
   
   def [] pos
     row, col = pos
-    Tile.new(self, row, col)
+    return Tile.new(self, row, col) if out_of_bounds(pos)
+    @rows[row][col]
+  end
+  
+  def out_of_bounds(pos)
+    !within_bounds(pos)
+  end
+  
+  def within_bounds(pos)
+    row, col = pos
+    (0...height).include?(row) && (0...width).include?(col)
+  end
+  
+  def flag(row, col)
+    @rows[row][col].state = :flagged
+  end
+  
+  def reveal(row, col)
+    if @rows[row][col].bomb
+      @revealed_bomb = true
+    else
+      @rows[row][col].state = :revealed
+    end
+  end
+  
+  def game_over?
+    game_won? || game_lost?
+  end
+  
+  def game_won?
+    @rows.flatten.all? do |tile|
+      tile.state == :revealed || tile.bomb
+    end
+  end
+  
+  def game_lost?
+    @revealed_bomb
   end
   
 end
@@ -48,6 +99,11 @@ class Game
       take_input
       update_board
     end
+    if @board.game_won?
+      puts "VICTORY"
+    else
+      puts "DEFEAT"
+    end
   end
   
   def welcome_message
@@ -55,8 +111,7 @@ class Game
   end
   
   def game_over?
-    # @board.game_over?
-    false
+    @board.game_over?
   end
   
   def display_board
@@ -87,7 +142,7 @@ class Game
       return take_input
     end
     
-    unless row =~ /\a\d+\z/ && col =~ /\a\d+\z/
+    unless row =~ /^\d+$/ && col =~ /^\d+$/
       puts "Invalid row and/or column"
       puts "Row and column must be integers"
       return take_input
