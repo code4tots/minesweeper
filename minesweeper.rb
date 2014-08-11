@@ -115,12 +115,12 @@ class Game
   end
 
   def reveal
-    puts "Revealing position #{@row}, #{@col}"
+    # puts "Revealing position #{@row}, #{@col}"
     @board.reveal(@row, @col)
   end
   
   def flag
-    puts "Flagging position #{@row}, #{@col}"
+    # puts "Flagging position #{@row}, #{@col}"
     @board.flag(@row, @col)
   end
   
@@ -132,9 +132,7 @@ class Game
       flag
     end
   end
-  
 end
-
 
 class UserInterface
   def initialize(save_filename = nil)
@@ -239,5 +237,8 @@ class ConsoleUserInterface < UserInterface
   end
 end
 
-game = ConsoleUserInterface.new
-game.play
+if __FILE__ == $PROGRAM_NAME
+  game = ConsoleUserInterface.new
+  game.play
+end
+
